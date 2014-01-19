@@ -4,30 +4,44 @@ var through = require('through');
 
 module.exports = function(fn,opts){
   opts = opts||{};
-  var highWaterMark = opts.max||opts.highWaterMark||100;
-  var lowWaterMark = opts.min||opts.lowWaterMark||0;
+  var max = opts.max, q = [];
+  var highWaterMark = opts.high||opts.highWaterMark||100;
+  var lowWaterMark = opts.low||opts.lowWaterMark||highWaterMark;
+  if(highWaterMark > max) highWaterMark = max;
 
-  var s = through(function(data){
-    var z = this;
-    z.pressure++;
+  var s;
+
+  var runfn = function(){
+    if(!q.length) return;
+    var data = q.shift();
+    s.pressure++;
     checkp();
     fn(data,function(err,data){
-      if(err) z.emit('error',err);
-      if(data) z.queue(data);
-      z.pressure--;
+      if(err) s.emit('error',err);
+      if(data) s.queue(data);
+      s.pressure--;
       checkp();
     });
+    return true;
+  }
+
+  s = through(function(data){
+    var z = this;
+    q.push(data);
+    if(!max || z.pressure < max) runfn();
   });
+
+  s.maxq = q;
 
   var checkp = function(){
     if(s.paused) {
       if(s.pressure <= lowWaterMark){
         s.resume();
+        while(!s.paused && runfn()); 
       }
     } else if(s.pressure >= highWaterMark){
       s.pause();
     }
-    return true;
   }
 
   s.pressure = 0;

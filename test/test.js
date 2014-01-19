@@ -10,7 +10,7 @@ test("can do exactly as many things as i expect",function(t){
     q.push(function(){
       cb(false,data);
     });
-  },{min:2,max:3});
+  },{low:2,high:3});
   
   s.write(1)
   s.write(2)
@@ -26,6 +26,34 @@ test("can do exactly as many things as i expect",function(t){
   })
   q.shift()();
 });
+
+test("does enforce max",function(t){
+  var calls = 0,q = [];
+  var s = pressure(function(data,cb){
+    console.log(data);
+    calls++;
+    q.push(function(){
+      cb(false,data);
+    });
+  },{high:2,max:3});
+
+  s.write(1); 
+  s.write(2);
+  s.write(3);
+  s.write(4);
+  s.write(5);
+
+  t.equals(calls,3,"must have only sent 3 data events");
+
+  q.shift()();
+
+  t.equals(calls,4,"must have only sent 4 data events");
+
+  t.end();
+
+
+})
+
 
 
 
