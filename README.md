@@ -9,14 +9,19 @@ var pressure = require('pressure-stream');
 var split = require('split');
 var request = require('request');
 
+
+// reading urls from stdin only do 2 requests at a time
+
 process.stdin.pipe(split())
-.pipe(pressure(function(url,cb){
-  
-  request(url)
-},{max:100})).pipe(process.stdout);
+.pipe(pressure(function(data,cb){
+  request(data,function(err,res,body){
+    cb(err,body)
+  });
+},{max:2})).pipe(process.stdout);
 
 
 ```
+
 
 
 API
