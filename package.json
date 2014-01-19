@@ -1,0 +1,19 @@
+{
+  "name": "pressure-stream",
+  "description": "call an async function for each data event into through stream. manage concurrency as back pressure",
+  "version": "0.0.0",
+  "repository": {
+    "url": "git://github.com/soldair/node-pressure-stream.git"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "tape test/*.js"
+  },
+  "author": "Ryan Day",
+  "dependencies": {
+    "through": "~2.3.4"
+  },
+  "devDependencies": {
+    "tape": "~2.3.2"
+  }
+}
