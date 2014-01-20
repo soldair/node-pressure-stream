@@ -4,13 +4,14 @@ var through = require('through');
 
 module.exports = function(fn,opts){
   opts = opts||{};
-  var max = opts.max, q = [];
-  var highWaterMark = opts.high||opts.highWaterMark||100;
+  var max = opts.max;
+  var q = [];
+  var highWaterMark = opts.high||opts.highWaterMark||Infinity;
   var lowWaterMark = opts.low||opts.lowWaterMark||highWaterMark;
+
   if(highWaterMark > max) highWaterMark = max;
 
   var s;
-
   var runfn = function(){
     if(!q.length) return;
     var data = q.shift();
@@ -28,7 +29,7 @@ module.exports = function(fn,opts){
   s = through(function(data){
     var z = this;
     q.push(data);
-    if(!max || z.pressure < max) runfn();
+    if(z.pressure < max) runfn();
   });
 
   s.maxq = q;
@@ -48,6 +49,3 @@ module.exports = function(fn,opts){
 
   return s;
 }
-
-
-

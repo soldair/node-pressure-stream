@@ -12,12 +12,18 @@ var request = require('request');
 
 // reading urls from stdin only do 2 requests at a time
 
+var options = {
+  high:50, // if i get to 50 concurrent requests become paused
+  low:25,  // if i was paused wait until i am down to at least 25 concurrent requests before resuming again
+  max:100  // never ever do more than 100 requests at a time. when someone doesn't care if you are paused and keeps writing.
+};
+
 process.stdin.pipe(split())
 .pipe(pressure(function(data,cb){
   request(data,function(err,res,body){
     cb(err,body)
   });
-},{max:2})).pipe(process.stdout);
+},options)).pipe(process.stdout);
 
 
 ```
