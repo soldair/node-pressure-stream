@@ -1,5 +1,5 @@
 var test = require('tape');
-var pressure = require('../wtf.js');
+var pressure = require('../');
 
 
 test("can do exactly as many things as i expect",function(t){
