@@ -1,51 +1,40 @@
-var through = require('through');
+var once = require('once')
+var t2 = require('through2')
 
-// call an async function. manage concurrency as backpressure.
 
-module.exports = function(fn,opts){
-  opts = opts||{};
-  var max = opts.max;
-  var q = [];
-  var highWaterMark = opts.high||opts.highWaterMark||Infinity;
-  var lowWaterMark = opts.low||opts.lowWaterMark||highWaterMark;
-
-  if(highWaterMark > max) highWaterMark = max;
-
-  var s;
-  var runfn = function(){
-    if(!q.length) return;
-    var data = q.shift();
-    s.pressure++;
-    checkp();
-    fn(data,function(err,data){
-      if(err) s.emit('error',err);
-      if(data) s.queue(data);
-      s.pressure--;
-      checkp();
-    });
-    return true;
+module.exports = function(handler,concurrency){
+  if(typeof concurrency == 'object' && concurrency){
+    concurrency = concurrency.high||concurrency.max
   }
+  concurrency = concurrency||5
 
-  s = through(function(data){
-    var z = this;
-    q.push(data);
-    if(z.pressure < max) runfn();
-  });
-
-  s.maxq = q;
-
-  var checkp = function(){
-    if(s.paused) {
-      if(s.pressure <= lowWaterMark){
-        s.resume();
-        while(!s.paused && runfn()); 
-      }
-    } else if(s.pressure >= highWaterMark){
-      s.pause();
+  var active = 0
+  var blocked = false
+  var s = t2.obj(function(chunk,enc,cb){
+    active++
+    if(active >= concurrency) {
+      if(blocked) {
+        console.warn('[WARNING] pressure-stream forced to do more work than allowed! '+active+' jobs')
+        cb()
+      } else blocked = cb
+    } else {
+      cb()
     }
-  }
 
-  s.pressure = 0;
+    handler(chunk,once(function(err,data){
+      if(err) s.emit('error'.err)
+      if(data) s.push(data)
 
-  return s;
+      active--
+      if(active < concurrency && blocked) {
+        var b = blocked
+        blocked = false
+        b()
+      }
+    }))
+  })
+
+  return s
 }
+
+
