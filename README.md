@@ -31,9 +31,9 @@ pressure(fn,opts)
 -----------------
   - fn is the data handler it is always called with 2 arguments
     - fn(data,cb)
-  - when you are done with the the handler call cb(err,data)
+  - when you are done with the handler call cb(err,data)
     - if err is passed back with cb "error" will be emitted on the stream
-    - data passed back on this stream will be emited as data
+    - data passed back on this stream will be emitted as data
 
 
 options
